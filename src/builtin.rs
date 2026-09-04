@@ -3,10 +3,10 @@ use std::{
     error::Error,
     fmt::Display,
     io::{self, Write},
-    path::PathBuf,
     process,
 };
 
+#[derive(Debug)]
 pub struct BuiltIn {
     command: String,
     args: Vec<String>,
@@ -115,7 +115,7 @@ impl BuiltIn {
             eprintln!("you must enter a target");
         }
         Ok(())
-    } */
+    }
     fn find_in_path(&self) -> Option<PathBuf> {
         let command = self.args.get(1)?;
         let path = env::var_os("PATH")?;
@@ -130,6 +130,7 @@ impl BuiltIn {
 
         None
     }
+    */
     fn shrug(&self) -> Result<(), Box<dyn Error>> {
         println!("_        _");
         println!(" \\_(ツ)_/");

@@ -1,28 +1,92 @@
 use msh::utils::parse;
 
-#[test]
-fn parse_test() {
-    println!("test 1, conjoined word test: helloworld");
-    assert_eq!(parse("helloworld").unwrap(), ["helloworld"]);
-    println!("passed");
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    println!("task 2, multiple words test: hello world test");
-    assert_eq!(
-        parse("hello world test").unwrap(),
-        ["hello", "world", "test"]
-    );
-    println!("passed");
+    #[test]
+    fn parse_empty_input() {
+        assert_eq!(parse(""), Ok(vec![]));
+    }
 
-    println!("task 3, multiple words as one element test: hello \"world bro\"");
-    assert_eq!(
-        parse("hello \"world bro\"").unwrap(),
-        ["hello", "world bro"]
-    );
-    println!("passed");
+    #[test]
+    fn parse_single_command() {
+        assert_eq!(parse("echo"), Ok(vec!["echo".to_string()]));
+    }
 
-    println!("task 4, odd number of quotes should error: hello \"world \"bro\"");
-    let result = parse("hello \"world \"bro\"");
-    assert!(result.is_err(), "expected an error, got {:?}", result);
-    assert_eq!(result.unwrap_err(), "undetermined quote");
-    println!("passed");
+    #[test]
+    fn parse_multiple_arguments() {
+        assert_eq!(
+            parse("echo hello world"),
+            Ok(vec![
+                "echo".to_string(),
+                "hello".to_string(),
+                "world".to_string(),
+            ])
+        );
+    }
+
+    #[test]
+    fn parse_multiple_spaces() {
+        assert_eq!(
+            parse("echo   hello    world"),
+            Ok(vec![
+                "echo".to_string(),
+                "hello".to_string(),
+                "world".to_string(),
+            ])
+        );
+    }
+
+    #[test]
+    fn parse_tabs() {
+        assert_eq!(
+            parse("echo\thello\tworld"),
+            Ok(vec![
+                "echo".to_string(),
+                "hello".to_string(),
+                "world".to_string(),
+            ])
+        );
+    }
+
+    #[test]
+    fn parse_quoted_argument() {
+        assert_eq!(
+            parse(r#"echo "hello world""#),
+            Ok(vec!["echo".to_string(), "hello world".to_string(),])
+        );
+    }
+
+    #[test]
+    fn parse_empty_quoted_argument() {
+        assert_eq!(
+            parse(r#"echo "" test"#),
+            Ok(vec!["echo".to_string(), "test".to_string(),])
+        );
+    }
+
+    #[test]
+    fn parse_unterminated_quote() {
+        assert_eq!(
+            parse(r#"echo "hello"#),
+            Err("undetermined quote".to_string())
+        );
+    }
+
+    #[test]
+    fn parse_quotes_inside_argument() {
+        assert_eq!(
+            parse(r#"echo foo"bar"baz"#),
+            Ok(vec!["echo".to_string(), "foobarbaz".to_string(),])
+        );
+    }
+
+    #[test]
+    fn parse_background_command() {
+        assert_eq!(
+            parse("sleep 10 &"),
+            Ok(vec!["sleep".to_string(), "10".to_string(), "&".to_string(),])
+        );
+    }
 }
