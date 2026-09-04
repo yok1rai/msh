@@ -1,8 +1,26 @@
-use nix::unistd::{ForkResult, execvp, fork};
+use nix::{
+    sys::wait::{WaitPidFlag, WaitStatus, waitpid},
+    unistd::{ForkResult, execvp, fork},
+};
 use std::error::Error;
 use std::ffi::CString;
 
-pub fn run(command: Vec<String>) -> Result<(), Box<dyn Error>> {
+pub extern "C" fn sigchld_handler(_: i32) {
+    loop {
+        match waitpid(nix::unistd::Pid::from_raw(-1), Some(WaitPidFlag::WNOHANG)) {
+            Ok(WaitStatus::StillAlive) | Err(_) => break,
+            Ok(_) => {}
+        }
+    }
+}
+
+pub fn run(mut command: Vec<String>) -> Result<(), Box<dyn Error>> {
+    let bg = command.last().map(|s| s.trim() == "&").unwrap_or(false);
+
+    if bg {
+        command.pop();
+    }
+
     if command.is_empty() {
         return Ok(());
     }
@@ -19,7 +37,11 @@ pub fn run(command: Vec<String>) -> Result<(), Box<dyn Error>> {
         }
 
         ForkResult::Parent { child } => {
-            nix::sys::wait::waitpid(child, None)?;
+            if bg {
+                println!("[BG PID: {child}]");
+            } else {
+                waitpid(child, None)?;
+            }
         }
     }
 
