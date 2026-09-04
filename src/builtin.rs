@@ -1,38 +1,67 @@
 use std::{
     env,
     error::Error,
+    fmt::Display,
     io::{self, Write},
     path::PathBuf,
     process,
 };
 
-pub struct BuiltIn<'a> {
-    command: &'a str,
-    args: Vec<&'a str>,
+pub struct BuiltIn {
+    command: String,
+    args: Vec<String>,
 }
 
-pub const BUILTNS: [&str; 6] = ["cd", "echo", "exit", "pwd", "type", "shrug"];
+#[derive(Debug)]
+pub struct BuiltInError {
+    msg: String,
+}
 
-impl<'a> BuiltIn<'a> {
-    pub fn new(input: &'a str) -> Option<Self> {
-        let args: Vec<&'a str> = input.split_whitespace().collect();
+impl Display for BuiltInError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.msg)
+    }
+}
 
+impl Error for BuiltInError {}
+
+#[derive(Debug)]
+pub struct NotBuiltInError {}
+
+impl Display for NotBuiltInError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "not a builtin")
+    }
+}
+
+impl Error for NotBuiltInError {}
+
+const BUILTINS: &[&str] = &["cd", "echo", "exit", "pwd", "type", "shrug"];
+
+impl BuiltIn {
+    pub fn new(args: &[String]) -> Result<Self, Box<dyn Error>> {
         if args.is_empty() {
-            return None;
+            let err = BuiltInError {
+                msg: "No argument given".to_string(),
+            };
+            Err(Box::new(err))
+        } else if !BUILTINS.contains(&args[0].trim()) {
+            let err = NotBuiltInError {};
+            Err(Box::new(err))
+        } else {
+            Ok(Self {
+                command: args[0].clone(),
+                args: args.to_vec(),
+            })
         }
-
-        Some(Self {
-            command: args[0],
-            args,
-        })
     }
     pub fn execute(&self) -> Result<(), Box<dyn Error>> {
-        match self.command {
+        match self.command.as_str() {
             "cd" => self.cd(),
             "echo" => self.echo(),
             "exit" => self.exit(),
             "pwd" => self.pwd(),
-            "type" => self._type(),
+            // "type" => self._type(),
             "shrug" => self.shrug(),
             _ => Ok(()),
         }
@@ -73,9 +102,9 @@ impl<'a> BuiltIn<'a> {
     fn exit(&self) -> Result<(), Box<dyn Error>> {
         process::exit(0);
     }
-    fn _type(&self) -> Result<(), Box<dyn Error>> {
+    /*    fn _type(&self) -> Result<(), Box<dyn Error>> {
         if let Some(arg) = self.args.get(1) {
-            if BUILTNS.contains(arg) {
+            if BUILTINS.contains(&arg.as_str()) {
                 println!("{} is a shell-builtin", arg);
             } else if self.find_in_path().is_some() {
                 println!("{} is a binary", arg);
@@ -86,7 +115,7 @@ impl<'a> BuiltIn<'a> {
             eprintln!("you must enter a target");
         }
         Ok(())
-    }
+    } */
     fn find_in_path(&self) -> Option<PathBuf> {
         let command = self.args.get(1)?;
         let path = env::var_os("PATH")?;

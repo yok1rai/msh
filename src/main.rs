@@ -1,4 +1,4 @@
-use msh::*;
+use msh::{builtin::BuiltIn, *};
 
 fn main() {
     let signals = signals::SignalHandler::default();
@@ -11,29 +11,30 @@ fn main() {
                     println!();
                     continue;
                 }
-
                 eprintln!("{e}");
                 continue;
             }
         };
-
-        let command_name = match command.split_whitespace().next() {
-            Some(command) => command,
-            None => continue,
+        let parsed = match utils::parse(command.trim()) {
+            Ok(parsed) => parsed,
+            Err(e) => {
+                eprintln!("parsing err: {e}");
+                continue;
+            }
         };
-
-        if builtin::BUILTNS.contains(&command_name) {
-            if let Some(builtin) = builtin::BuiltIn::new(&command) {
-                if let Err(e) = builtin.execute() {
-                    eprintln!("{e}");
+        match BuiltIn::new(&parsed) {
+            Ok(bltn) => bltn.execute().unwrap(),
+            Err(e) => {
+                if let Some(_) = e.downcast_ref::<builtin::NotBuiltInError>() {
+                    match process::run(parsed) {
+                        Ok(()) => (),
+                        Err(e) => {
+                            eprintln!("{e}");
+                            continue;
+                        }
+                    }
                 }
             }
-            continue;
-        }
-
-        if let Err(e) = process::run(&command) {
-            eprintln!("{e}");
         }
     }
 }
-
