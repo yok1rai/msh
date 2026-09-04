@@ -1,5 +1,6 @@
 use msh::*;
 use nix::sys::signal::{self, SaFlags, SigAction, SigHandler, SigSet, Signal};
+use std::sync::atomic::Ordering;
 
 fn main() {
     let signals = signals::SignalHandler::default();
@@ -15,6 +16,9 @@ fn main() {
     }
 
     loop {
+        if process::CHILD_EXITED.swap(false, Ordering::Relaxed) {
+            process::reap_children();
+        }
         let command: String = match utils::input("> ") {
             Ok(command) => command,
             Err(e) => {
@@ -53,4 +57,3 @@ fn main() {
         }
     }
 }
-
