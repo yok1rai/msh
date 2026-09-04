@@ -3,6 +3,7 @@ use std::{
     error::Error,
     fmt::Display,
     io::{self, Write},
+    path::PathBuf,
     process,
 };
 
@@ -36,7 +37,7 @@ impl Display for NotBuiltInError {
 
 impl Error for NotBuiltInError {}
 
-const BUILTINS: &[&str] = &["cd", "echo", "exit", "pwd", "type", "shrug"];
+const BUILTINS: &[&str] = &["cd", "echo", "exit", "pwd", "type", "shrug", "jobs"];
 
 impl BuiltIn {
     pub fn new(args: &[String]) -> Result<Self, Box<dyn Error>> {
@@ -55,14 +56,15 @@ impl BuiltIn {
             })
         }
     }
-    pub fn execute(&self) -> Result<(), Box<dyn Error>> {
+    pub fn execute(&self, job_table: &crate::process::JobTable) -> Result<(), Box<dyn Error>> {
         match self.command.as_str() {
             "cd" => self.cd(),
             "echo" => self.echo(),
             "exit" => self.exit(),
             "pwd" => self.pwd(),
-            // "type" => self._type(),
+            "type" => self._type(),
             "shrug" => self.shrug(),
+            "jobs" => Self::jobs(job_table),
             _ => Ok(()),
         }
     }
@@ -102,7 +104,7 @@ impl BuiltIn {
     fn exit(&self) -> Result<(), Box<dyn Error>> {
         process::exit(0);
     }
-    /*    fn _type(&self) -> Result<(), Box<dyn Error>> {
+    fn _type(&self) -> Result<(), Box<dyn Error>> {
         if let Some(arg) = self.args.get(1) {
             if BUILTINS.contains(&arg.as_str()) {
                 println!("{} is a shell-builtin", arg);
@@ -116,6 +118,19 @@ impl BuiltIn {
         }
         Ok(())
     }
+
+    fn jobs(jobs: &crate::process::JobTable) -> Result<(), Box<dyn Error>> {
+        for job in jobs.iter() {
+            let state = match job.state {
+                crate::process::JobState::Running => "Running",
+                crate::process::JobState::Stopped => "Stopped",
+                crate::process::JobState::Done => "Done",
+            };
+            println!("[{}] {} {}", job.id, state, job.command);
+        }
+        Ok(())
+    }
+
     fn find_in_path(&self) -> Option<PathBuf> {
         let command = self.args.get(1)?;
         let path = env::var_os("PATH")?;
@@ -130,7 +145,7 @@ impl BuiltIn {
 
         None
     }
-    */
+
     fn shrug(&self) -> Result<(), Box<dyn Error>> {
         println!("_        _");
         println!(" \\_(ツ)_/");

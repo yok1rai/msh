@@ -4,6 +4,7 @@ use std::sync::atomic::Ordering;
 
 fn main() {
     let signals = signals::SignalHandler::default();
+    let mut job_table = process::JobTable::new();
 
     let action = SigAction::new(
         SigHandler::Handler(process::sigchld_handler),
@@ -17,7 +18,7 @@ fn main() {
 
     loop {
         if process::CHILD_EXITED.swap(false, Ordering::Relaxed) {
-            process::reap_children();
+            process::reap_children(&mut job_table);
         }
         let command: String = match utils::input("> ") {
             Ok(command) => command,
@@ -41,11 +42,11 @@ fn main() {
         };
 
         match builtin::BuiltIn::new(&parsed) {
-            Ok(bltn) => bltn.execute().unwrap(),
+            Ok(bltn) => bltn.execute(&job_table).unwrap(),
 
             Err(e) => {
                 if e.downcast_ref::<builtin::NotBuiltInError>().is_some() {
-                    match process::run(parsed) {
+                    match process::run(parsed, &mut job_table) {
                         Ok(()) => (),
                         Err(e) => {
                             eprintln!("{e}");
@@ -57,3 +58,4 @@ fn main() {
         }
     }
 }
+
