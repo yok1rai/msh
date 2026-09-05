@@ -1,10 +1,5 @@
 use rustyline::{DefaultEditor, error::ReadlineError};
-use std::{
-    error::Error,
-    fs::OpenOptions,
-    io::{self, Read, Write},
-    str::FromStr,
-};
+use std::{env, error::Error, fs::OpenOptions, io::Read, str::FromStr};
 
 pub fn read_file(path: &str) -> std::io::Result<String> {
     let mut file = OpenOptions::new()
@@ -37,6 +32,7 @@ where
     };
     Ok(buffer.trim().parse::<T>()?)
 }
+
 pub fn parse(src: &str) -> Result<Vec<Vec<String>>, String> {
     let mut result = Vec::new();
 
@@ -65,10 +61,6 @@ pub fn parse(src: &str) -> Result<Vec<Vec<String>>, String> {
             }
         }
 
-        if quoted {
-            return Err("undetermined quote".into());
-        }
-
         if !current.is_empty() {
             args.push(current);
         }
@@ -77,4 +69,44 @@ pub fn parse(src: &str) -> Result<Vec<Vec<String>>, String> {
     }
 
     Ok(result)
+}
+
+pub fn expand(args: Vec<String>) -> Vec<String> {
+    args.into_iter()
+        .map(|arg| {
+            let mut result = String::new();
+            let mut chars = arg.chars().peekable();
+
+            while let Some(c) = chars.next() {
+                if c == '$' {
+                    let mut name = String::new();
+
+                    while let Some(&c) = chars.peek() {
+                        if c.is_alphanumeric() || c == '_' {
+                            name.push(c);
+                            chars.next();
+                        } else {
+                            break;
+                        }
+                    }
+
+                    if name.is_empty() {
+                        result.push('$');
+                    } else {
+                        match env::var(&name) {
+                            Ok(value) => result.push_str(&value),
+                            Err(_) => {
+                                result.push('$');
+                                result.push_str(&name);
+                            }
+                        }
+                    }
+                } else {
+                    result.push(c);
+                }
+            }
+
+            result
+        })
+        .collect()
 }
