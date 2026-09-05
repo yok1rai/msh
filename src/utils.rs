@@ -61,6 +61,10 @@ pub fn parse(src: &str) -> Result<Vec<Vec<String>>, String> {
             }
         }
 
+        if quoted {
+            return Err("undetermined quote".into());
+        }
+
         if !current.is_empty() {
             args.push(current);
         }
