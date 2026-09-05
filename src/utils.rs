@@ -32,33 +32,44 @@ where
     Ok(buffer.trim().parse::<T>()?)
 }
 
-pub fn parse(src: &str) -> Result<Vec<String>, String> {
-    let mut args = Vec::new();
-    let mut current = String::new();
-    let mut quoted = false;
+pub fn parse(src: &str) -> Result<Vec<Vec<String>>, String> {
+    let mut result = Vec::new();
 
-    'outer: for l in src.lines() {
-        for c in l.chars() {
+    for line in src.lines() {
+        let mut args = Vec::new();
+        let mut current = String::new();
+        let mut quoted = false;
+
+        for c in line.chars() {
             match c {
-                '#' if !quoted => continue 'outer,
-                '"' => quoted = !quoted,
+                '#' if !quoted => break,
+
+                '"' => {
+                    quoted = !quoted;
+                }
+
                 ' ' | '\t' if !quoted => {
                     if !current.is_empty() {
                         args.push(std::mem::take(&mut current));
                     }
                 }
-                _ => current.push(c),
+
+                _ => {
+                    current.push(c);
+                }
             }
         }
+
+        if quoted {
+            return Err("undetermined quote".into());
+        }
+
+        if !current.is_empty() {
+            args.push(current);
+        }
+
+        result.push(args);
     }
 
-    if quoted {
-        return Err("undetermined quote".into());
-    }
-
-    if !current.is_empty() {
-        args.push(current);
-    }
-
-    Ok(args)
+    Ok(result)
 }
