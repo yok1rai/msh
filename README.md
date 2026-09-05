@@ -9,25 +9,95 @@ Currently, it's under development and in a very early stage.
 ## Intended Syntax for The Future
 
 ```msh
-const MIN_AGE: Number = 18 
+function main() -> Void
+    loop 
+        let num: Number = if not input!("Enter number 1: ").parse()
+            print!("{}", Error("you must enter a number"))
+            continue 
+        let num: Number = if not input!("Enter number 1: ").parse()
+            print!("{}", Error("you must enter a number"))
+            continue 
+        let op: String = input!("Enter operator: ")
+        let result: Number = match op 
+            "+" => num1 + num2, 
+            "-" => num1 - num2, 
+            "*" => num1 * num2,
+            "/" => \ 
+                if num2 == 0 
+                    print!("{}", Error("You cannot divide by zero"))
+                    continue 
+                num1 / num2 
+            _ => \
+                print!("{}", Error("invalid operator"))
+                continue 
+        print!("{}", result)
 
-function first_even(arr: [Number]): May[Number]
-    for num of arr 
-        if num % 2 == 0 
-            return Found(num) 
-    return None 
-
-numbers: [Number] 
-
-print!("Enter 5 numbers ")
-for i of 1..=5
-    num: Number = read("-p", format!("Number {}: ", i))
-    numbers.append(num) 
-if num found first_even!(numbers)
-    print("First even number is {}", num)
-else 
-    print!("There is no even number in this array")
+main!()
 ```
+
+```msh 
+function first_even(numbers: [Number]) -> Option<Number>
+    for num in numbers
+        if num % 2 == 0
+            return Some(num)
+
+    return None
+
+
+function main() -> Void
+    let numbers: [Number] = [1, 3, 7, 10, 13, 18]
+
+    let result: Option<Number> = first_even!(numbers)
+
+    match result
+        Some(num)
+            print!("First even number: {}", num)
+
+        None
+            print!("{}", Error("there are no even numbers"))
+
+
+main!()
+```
+
+```msh 
+function main() -> Void
+    let directory: String = input!("Directory: ")
+
+    cd(directory)
+        .if_fails!(|err|
+            print!("{}", err)
+            return
+        )
+
+    print!("Files in {}:", directory)
+
+    ls()
+
+    print!("\nSearching for Rust files...")
+
+    find(".", "-name", "*.rs")
+        .if_fails!(|err|
+            print!("{}", err)
+            return
+        )
+
+    print!("\nCounting Rust files...")
+
+    find(".", "-name", "*.rs")
+        | wc("-l")
+
+    print!("\nLargest files:")
+
+    du("-ah", ".")
+        | sort("-h")
+        | tail("-n", "10")
+
+
+main!()
+```
+
+
 
 ## Current Development
 
