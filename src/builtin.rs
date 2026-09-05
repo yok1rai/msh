@@ -37,7 +37,7 @@ impl Display for NotBuiltInError {
 
 impl Error for NotBuiltInError {}
 
-const BUILTINS: &[&str] = &["cd", "echo", "exit", "pwd", "type", "shrug", "jobs"];
+const BUILTINS: &[&str] = &["cd", "echo", "exit", "pwd", "type", "shrug", "jobs", "eval"];
 
 impl BuiltIn {
     pub fn new(args: &[String]) -> Result<Self, Box<dyn Error>> {
@@ -65,6 +65,7 @@ impl BuiltIn {
             "type" => self._type(),
             "shrug" => self.shrug(),
             "jobs" => Self::jobs(job_table),
+            "eval" => self.eval(),
             _ => Ok(()),
         }
     }
@@ -144,6 +145,57 @@ impl BuiltIn {
         }
 
         None
+    }
+    fn eval(&self) -> Result<(), Box<dyn Error>> {
+        if let Some(op) = self.args.get(2) {
+            let num1: f64 = match self.args[1].trim().parse() {
+                Ok(num) => num,
+                Err(_) => {
+                    eprintln!("you must enter a number");
+                    return Ok(());
+                }
+            };
+            let num2: f64 = if let Some(num) = self.args.get(3) {
+                match num.trim().parse::<f64>() {
+                    Ok(num) => num,
+                    Err(_) => {
+                        eprintln!("you must enter a number");
+                        return Ok(());
+                    }
+                }
+            } else {
+                eprintln!("you must enter second number");
+                return Ok(());
+            };
+            let op_result = match op.trim() {
+                "+" => num1 + num2,
+                "-" => num1 - num2,
+                "*" => num1 * num2,
+                "/" => {
+                    if num2 == 0.0 {
+                        eprintln!("you cannot divide by zero");
+                        return Ok(());
+                    }
+                    num1 / num2
+                }
+                "%" => {
+                    if num2 == 0.0 {
+                        eprintln!("you cannot module by zero");
+                        return Ok(());
+                    }
+                    num1 % num2
+                }
+                "@" => num1.powf(1.0 / num2),
+                _ => {
+                    eprintln!("invalid operator");
+                    return Ok(());
+                }
+            };
+            println!("{op_result}");
+        } else {
+            eprintln!("You must specify an operator");
+        }
+        Ok(())
     }
 
     fn shrug(&self) -> Result<(), Box<dyn Error>> {
