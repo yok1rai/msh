@@ -20,7 +20,7 @@ fn main() {
         if process::CHILD_EXITED.swap(false, Ordering::Relaxed) {
             process::reap_children(&mut job_table);
         }
-        let command: String = match utils::input("> ") {
+        let command: String = match utils::input(config::get_prompt().as_str()) {
             Ok(command) => command,
             Err(e) => {
                 if signals.was_interrupted() {
@@ -58,4 +58,3 @@ fn main() {
         }
     }
 }
-

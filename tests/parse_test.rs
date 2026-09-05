@@ -89,4 +89,45 @@ mod tests {
             Ok(vec!["sleep".to_string(), "10".to_string(), "&".to_string(),])
         );
     }
+
+    #[test]
+    fn parse_full_line_comment() {
+        assert_eq!(parse("# this is a comment"), Ok(vec![]));
+    }
+
+    #[test]
+    fn parse_inline_comment() {
+        assert_eq!(
+            parse("echo hello # this is a comment"),
+            Ok(vec!["echo".to_string(), "hello".to_string(),])
+        );
+    }
+
+    #[test]
+    fn parse_hash_inside_quotes() {
+        assert_eq!(
+            parse(r##"echo "hello # world""##),
+            Ok(vec!["echo".to_string(), "hello # world".to_string(),])
+        );
+    }
+
+    #[test]
+    fn parse_comment_on_multiple_lines() {
+        assert_eq!(
+            parse(
+                r#"
+                # first comment
+                echo hello
+                # second comment
+                echo world
+                "#
+            ),
+            Ok(vec![
+                "echo".to_string(),
+                "hello".to_string(),
+                "echo".to_string(),
+                "world".to_string(),
+            ])
+        );
+    }
 }

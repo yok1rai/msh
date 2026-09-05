@@ -65,6 +65,7 @@ impl BuiltIn {
             "type" => self._type(),
             "shrug" => self.shrug(),
             "jobs" => Self::jobs(job_table),
+
             "eval" => self.eval(),
             _ => Ok(()),
         }
@@ -121,6 +122,10 @@ impl BuiltIn {
     }
 
     fn jobs(jobs: &crate::process::JobTable) -> Result<(), Box<dyn Error>> {
+        if jobs.len() < 1 {
+            eprintln!("there is no active jobs");
+            return Ok(());
+        }
         for job in jobs.iter() {
             let state = match job.state {
                 crate::process::JobState::Running => "Running",

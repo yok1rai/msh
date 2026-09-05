@@ -44,6 +44,10 @@ impl JobTable {
         }
     }
 
+    pub fn len(&self) -> usize {
+        self.jobs.len()
+    }
+
     pub fn add(&mut self, pid: Pid, command: String) -> usize {
         let id = self.next_id;
 
