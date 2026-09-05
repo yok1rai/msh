@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 nix = { version = "0.31.3", features = ["process", "signal"] }
+rustyline = "18.0.1"
 signal-hook = "0.4.4"

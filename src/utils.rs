@@ -1,3 +1,4 @@
+use rustyline::{DefaultEditor, error::ReadlineError};
 use std::{
     error::Error,
     fs::OpenOptions,
@@ -23,15 +24,19 @@ where
     T: FromStr,
     T::Err: Error + 'static,
 {
-    print!("{prompt}");
-    io::stdout().flush()?;
-
-    let mut buffer = String::new();
-    io::stdin().read_line(&mut buffer)?;
-
+    let mut rl = DefaultEditor::new()?;
+    let buffer = match rl.readline(prompt) {
+        Ok(line) => line,
+        Err(ReadlineError::Interrupted) => {
+            return Ok(T::default());
+        }
+        Err(ReadlineError::Eof) => {
+            return Ok(T::default());
+        }
+        Err(e) => return Err(Box::new(e)),
+    };
     Ok(buffer.trim().parse::<T>()?)
 }
-
 pub fn parse(src: &str) -> Result<Vec<Vec<String>>, String> {
     let mut result = Vec::new();
 
