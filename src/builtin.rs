@@ -37,7 +37,9 @@ impl Display for NotBuiltInError {
 
 impl Error for NotBuiltInError {}
 
-const BUILTINS: &[&str] = &["cd", "echo", "exit", "pwd", "type", "shrug", "jobs", "eval"];
+const BUILTINS: &[&str] = &[
+    "cd", "echo", "exit", "pwd", "type", "shrug", "jobs", "eval", "let",
+];
 
 impl BuiltIn {
     pub fn new(args: &[String]) -> Result<Self, Box<dyn Error>> {
@@ -65,7 +67,7 @@ impl BuiltIn {
             "type" => self._type(),
             "shrug" => self.shrug(),
             "jobs" => Self::jobs(job_table),
-
+            "let" => self._let(),
             "eval" => self.eval(),
             _ => Ok(()),
         }
@@ -150,6 +152,21 @@ impl BuiltIn {
         }
 
         None
+    }
+    fn _let(&self) -> Result<(), Box<dyn Error>> {
+        let Some(name) = self.args.get(1) else {
+            eprintln!("you must enter variable name");
+            return Ok(());
+        };
+        let Some(val) = self.args.get(2) else {
+            eprintln!("you must enter the value");
+            return Ok(());
+        };
+        unsafe {
+            env::set_var(name, val);
+        }
+        println!("{name} variable set to {val}");
+        Ok(())
     }
     fn eval(&self) -> Result<(), Box<dyn Error>> {
         if let Some(op) = self.args.get(2) {
