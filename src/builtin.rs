@@ -69,7 +69,10 @@ impl BuiltIn {
             "jobs" => Self::jobs(job_table),
             "let" => self._let(),
             "eval" => self.eval(),
-            _ => Ok(()),
+            _ => {
+                eprintln!("command not found");
+                Ok(())
+            }
         }
     }
 

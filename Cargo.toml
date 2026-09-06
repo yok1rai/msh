@@ -10,6 +10,11 @@ keywords = ["shell", "linux", "cli"]
 categories = ["command-line-utilities"]
 
 [dependencies]
-nix = { version = "0.31.3", features = ["process", "signal"] }
+nix = { version = "0.31.3", features = [
+    "process",
+    "signal",
+    "user",
+    "hostname",
+] }
 rustyline = "18.0.1"
 signal-hook = "0.4.4"

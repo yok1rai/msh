@@ -1,3 +1,4 @@
+use nix::unistd::{geteuid, gethostname};
 use rustyline::{DefaultEditor, error::ReadlineError};
 use std::{env, error::Error, fs::OpenOptions, io::Read, str::FromStr};
 
@@ -23,9 +24,12 @@ where
     let buffer = match rl.readline(prompt) {
         Ok(line) => line,
         Err(ReadlineError::Interrupted) => {
+            eprintln!("^C");
             return Ok(T::default());
         }
         Err(ReadlineError::Eof) => {
+            eprintln!("^D");
+
             return Ok(T::default());
         }
         Err(e) => return Err(Box::new(e)),
@@ -73,6 +77,31 @@ pub fn parse(src: &str) -> Result<Vec<Vec<String>>, String> {
     }
 
     Ok(result)
+}
+
+pub fn expand_builtin_vars() {
+    let prompt_symbol = { if geteuid().is_root() { "#" } else { "$" } };
+    let hostname = gethostname().unwrap_or("anon".into());
+    let pwd = env::current_dir()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .into_owned();
+    let prompt_pwd = if let Ok(home) = env::var("HOME") {
+        if pwd == home {
+            "~".to_string()
+        } else if let Some(rest) = pwd.strip_prefix(&(home + "/")) {
+            format!("~/{rest}")
+        } else {
+            pwd.clone()
+        }
+    } else {
+        pwd.clone()
+    };
+    unsafe {
+        env::set_var("PROMPT_SYMBOL", prompt_symbol);
+        env::set_var("HOSTNAME", hostname);
+        env::set_var("PROMPT_PWD", prompt_pwd);
+    }
 }
 
 pub fn expand(args: Vec<String>) -> Vec<String> {

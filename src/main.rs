@@ -16,6 +16,8 @@ fn main() {
         signal::sigaction(Signal::SIGCHLD, &action).expect("failed to install SIGCHLD handler");
     }
 
+    utils::expand_builtin_vars();
+
     loop {
         if process::CHILD_EXITED.swap(false, Ordering::Relaxed) {
             process::reap_children(&mut job_table);
@@ -69,3 +71,4 @@ fn main() {
         }
     }
 }
+
