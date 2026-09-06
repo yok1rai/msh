@@ -2,6 +2,12 @@
 name = "msh"
 version = "0.0.4"
 edition = "2024"
+license = "MIT"
+description = "A modern Shell (VIP)"
+repository = "https://github.com/yok1rai/msh"
+readme = "README.md"
+keywords = ["shell", "linux", "cli"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 nix = { version = "0.31.3", features = ["process", "signal"] }
