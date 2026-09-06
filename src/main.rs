@@ -1,4 +1,4 @@
-use msh::*;
+use mshell::*;
 use nix::sys::signal::{self, SaFlags, SigAction, SigHandler, SigSet, Signal};
 use std::sync::atomic::Ordering;
 

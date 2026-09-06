@@ -1,4 +1,4 @@
-use msh::builtin;
+use mshell::builtin;
 
 #[cfg(test)]
 mod tests {
@@ -55,4 +55,3 @@ mod tests {
         assert!(builtin::BuiltIn::new(&args(&["shrug"])).is_ok());
     }
 }
-

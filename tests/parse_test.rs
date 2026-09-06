@@ -1,4 +1,4 @@
-use msh::utils::parse;
+use mshell::utils::parse;
 
 #[cfg(test)]
 mod tests {
